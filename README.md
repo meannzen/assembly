@@ -1,80 +1,74 @@
-# List of Common Linux System Calls
+# Most Useful Linux System Calls / APIs (2026 Edition)
 
-## File and Directory Operations
-- `open` - Open a file.
-- `close` - Close a file.
-- `read` - Read data from a file.
-- `write` - Write data to a file.
-- `lseek` - Move the file pointer to a specified location.
-- `stat` - Get file status.
-- `fstat` - Get file status.
-- `lstat` - Get file status.
-- `mkdir` - Create a directory.
-- `rmdir` - Remove a directory.
-- `unlink` - Delete a file.
+A practical reference for systems programmers (C or Rust) on Linux.  
+These cover the majority of real-world needs in servers, tools, daemons, embedded systems, and high-performance applications.
 
-## Process Management
-- `fork` - Create a new process.
-- `execve` - Execute a program.
-- `exit` - Terminate a process.
-- `wait` - Wait for a process to change state.
-- `waitpid` - Wait for a specific process to change state.
-- `getpid` - Get the process ID.
-- `getppid` - Get the parent process ID.
+## 1. Core File I/O
 
-## Memory Management
-- `brk` - Change data segment size.
-- `mmap` - Map files or devices into memory.
-- `munmap` - Unmap files or devices from memory.
-- `mprotect` - Set memory protection.
-- `msync` - Synchronize memory with physical storage.
+| Syscall          | C Wrapper             | Description / Common Use Cases                              |
+|------------------|-----------------------|-------------------------------------------------------------|
+| read / readv     | `read()`, `readv()`   | Read data from files, sockets, pipes, or any file descriptor |
+| write / writev   | `write()`, `writev()` | Write data to files, sockets, pipes, or any file descriptor |
+| open / openat    | `open()`, `openat()`  | Open files or devices (use flags like O_CLOEXEC, O_NONBLOCK) |
+| close            | `close()`             | Close a file descriptor to free resources                   |
+| mmap / munmap    | `mmap()`, `munmap()`  | Map files or anonymous memory into process address space (zero-copy I/O, large allocations) |
+| fstat / stat / fstatat | `fstat()`, `stat()` | Get file metadata: size, type, permissions, timestamps      |
+| lseek            | `lseek()`             | Change the current file offset (seek)                       |
+| fsync / fdatasync| `fsync()`, `fdatasync()` | Ensure data is written to disk for durability            |
 
-## Inter-Process Communication (IPC)
-- `pipe` - Create a pipe.
-- `dup` - Duplicate a file descriptor.
-- `dup2` - Duplicate a file descriptor to a specific value.
-- `shmget` - Get shared memory segment.
-- `shmat` - Attach shared memory segment.
-- `shmctl` - Control shared memory segment.
-- `semget` - Get a semaphore set.
-- `semop` - Perform operations on a semaphore set.
-- `semctl` - Control a semaphore set.
+## 2. Process and Thread Management
 
-## Networking
-- `socket` - Create a socket.
-- `bind` - Bind a socket to an address.
-- `listen` - Listen for socket connections.
-- `accept` - Accept a socket connection.
-- `connect` - Connect a socket.
-- `send` - Send data through a socket.
-- `recv` - Receive data from a socket.
-- `getsockopt` - Get socket options.
-- `setsockopt` - Set socket options.
+| Syscall          | C Wrapper             | Description / Common Use Cases                              |
+|------------------|-----------------------|-------------------------------------------------------------|
+| fork / clone     | `fork()`, `clone()`   | Create a new process or lightweight thread                  |
+| execve           | `execve()`            | Replace the current process image with a new program        |
+| waitpid          | `waitpid()`           | Wait for child process termination and get exit status      |
+| exit             | `_exit()`             | Terminate the calling process                               |
+| getpid / gettid  | `getpid()`, `gettid()`| Get current process or thread ID (useful for logging)       |
 
-## Time Management
-- `time` - Get the current time.
-- `gettimeofday` - Get the current time of day.
-- `settimeofday` - Set the current time of day.
-- `clock_gettime` - Get the time of a specified clock.
-- `clock_settime` - Set the time of a specified clock.
-- `nanosleep` - Suspend execution for a specified time.
+## 3. Networking (Sockets)
 
-## User and Group Management
-- `getuid` - Get user ID.
-- `geteuid` - Get effective user ID.
-- `getgid` - Get group ID.
-- `getegid` - Get effective group ID.
-- `setuid` - Set user ID.
-- `seteuid` - Set effective user ID.
-- `setgid` - Set group ID.
-- `setegid` - Set effective group ID.
+| Syscall          | C Wrapper                  | Description / Common Use Cases                              |
+|------------------|----------------------------|-------------------------------------------------------------|
+| socket           | `socket()`                 | Create a socket (TCP, UDP, Unix domain, etc.)               |
+| bind             | `bind()`                   | Assign an address to a socket (server side)                 |
+| listen           | `listen()`                 | Mark socket as passive and set backlog                      |
+| accept / accept4 | `accept4()` (preferred)    | Accept incoming connection (use with SOCK_CLOEXEC)          |
+| connect          | `connect()`                | Initiate connection to remote socket (client side)          |
+| sendmsg / recvmsg| `sendmsg()`, `recvmsg()`   | Advanced send/receive with control messages and vectors     |
 
-## Miscellaneous
-- `ioctl` - Control device.
-- `fcntl` - File control operations.
-- `kill` - Send a signal to a process.
-- `sigaction` - Examine and change a signal action.
-- `sigsuspend` - Wait for a signal.
-- `sigpending` - Examine pending signals.
-- `sigprocmask` - Change and examine the signal mask.
-- `uname` - Get system information.
+## 4. Modern Event & Async I/O (High-Performance)
+
+| Syscall / API       | Library / Wrapper         | Description / Common Use Cases                              |
+|---------------------|---------------------------|-------------------------------------------------------------|
+| epoll_create1       | `epoll_create1()`         | Create an epoll instance for scalable I/O event notification |
+| epoll_ctl           | `epoll_ctl()`             | Add, modify, or remove file descriptors from epoll set     |
+| epoll_wait          | `epoll_wait()`            | Wait for I/O events (core of efficient servers like nginx)  |
+| io_uring_setup      | liburing                  | Set up io_uring ring for high-performance async I/O         |
+| io_uring_enter      | liburing                  | Submit requests and wait for completions                    |
+| signalfd            | `signalfd()`              | Convert signals into readable file descriptors              |
+| timerfd_create      | `timerfd_create()`        | Create timer as file descriptor (integrates with event loops) |
+
+## Quick Reference: Top Syscalls to Know Well
+
+1. `read()` / `write()`  
+2. `open()` / `close()`  
+3. `epoll_create1()` / `epoll_ctl()` / `epoll_wait()`  
+4. `mmap()`  
+5. `socket()` / `bind()` / `listen()` / `accept4()` / `connect()`  
+6. `fork()` / `execve()` / `waitpid()`  
+7. `fstat()` / `stat()`  
+8. `sendmsg()` / `recvmsg()`  
+9. io_uring family (for cutting-edge performance)  
+10. `signalfd()` + `timerfd()` (modern helpers for clean event loops)
+
+## Pro Tips
+
+- Use `O_CLOEXEC` flag on open/accept/socket to avoid leaks across fork/exec  
+- Prefer `accept4()` over plain `accept()` for better control  
+- For maximum performance in 2026: Learn **io_uring** — it's becoming the standard for fast I/O  
+- In Rust: Use safe wrappers via crates like `nix`, `mio`, `tokio`, `polling`, or `io-uring`
+
+Happy low-level programming! 🐧🔧
+
+Last updated: January 2026
